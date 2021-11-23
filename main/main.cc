@@ -8,7 +8,10 @@
 #include "color.h"
 #include "hittable_list.h"
 #include "sphere.h"
+#include "ellipsoid.h"
+#include "drop.h"
 #include "camera.h"
+
 
 #include <iostream>
 #include <fstream>
@@ -39,8 +42,9 @@ int main() {
     const int max_depth = 50;
     
     hittable_list world;
-    world.add(make_shared<sphere>(point3(0,0,-1), 0.5));
-    world.add(make_shared<sphere>(point3(0,-100.5,-1), 100));
+//    world.add(make_shared<sphere>(point3(-1,0,-3), 0.3));
+    world.add(make_shared<drop>(point3(0,1,-5), 0.3, 0.3, 0.3));
+//    world.add(make_shared<sphere>(point3(0,-100.5,-1), 100));
 
     camera cam;
 
@@ -77,4 +81,8 @@ int main() {
 
     file.close();
     std::cerr << "\nDone.\n";
+    std::cout << "\a";
+    std::cout << "\a";
+    std::cout << "\a";
+
 }
