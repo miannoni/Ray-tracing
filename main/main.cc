@@ -8,6 +8,7 @@
 #include "color.h"
 #include "hittable_list.h"
 #include "sphere.h"
+#include "drop.h"
 #include "camera.h"
 #include "material.h"
 
@@ -36,11 +37,16 @@ color ray_color(const ray& r, const hittable& world, int depth) {
 hittable_list random_scene() {
     hittable_list world;
 
-    auto ground_material = make_shared<lambertian>(color(0.5, 0.5, 0.5));
-    world.add(make_shared<sphere>(point3(0,-1000,0), 1000, ground_material));
+    // auto ground_material = make_shared<lambertian>(color(0.5, 0.5, 0.5));
+    // world.add(make_shared<sphere>(point3(0,-1000,0), 1000, ground_material));
 
-    for (int a = -11; a < 11; a++) {
-        for (int b = -11; b < 11; b++) {
+    auto checker = make_shared<checker_texture>(color(0.2, 0.3, 0.1), color(0.9, 0.9, 0.9));
+    world.add(make_shared<sphere>(point3(0,-1000,0), 1000, make_shared<lambertian>(checker)));
+
+    int size = 5;
+
+    for (int a = 0; a < size; a++) {
+        for (int b = -size; b < size; b++) {
             auto choose_mat = random_double();
             point3 center(a + 0.9*random_double(), 0.2, b + 0.9*random_double());
 
@@ -67,46 +73,116 @@ hittable_list random_scene() {
         }
     }
 
-    auto material1 = make_shared<dielectric>(1.5);
-    world.add(make_shared<sphere>(point3(0, 1, 0), 1.0, material1));
+    auto material2 = make_shared<lambertian>(color(0.5, 0.5, 0.5));
+    auto material1 = make_shared<metal>(color(0.8, 0.8, 0.8), 0.8);
 
-    auto material2 = make_shared<lambertian>(color(0.4, 0.2, 0.1));
-    world.add(make_shared<sphere>(point3(-4, 1, 0), 1.0, material2));
+    // world.add(make_shared<sphere>(point3(-4, 1, 0), 1.0, material2));
+    // world.add(make_shared<sphere>(point3(4, 1, 0), 1.0, material3));
+    // world.add(make_shared<drop>(point3(0, 1, 0), 1.0, material2));
 
-    auto material3 = make_shared<metal>(color(0.7, 0.6, 0.5), 0.0);
-    world.add(make_shared<sphere>(point3(4, 1, 0), 1.0, material3));
+    // world.add(make_shared<drop>(point3(-4, 1, 0), 1.0, 1.0, 1.0, material2));
+    // world.add(make_shared<drop>(point3(4, 2, 0), 0.5, 0.5, 0.5, material2));
+    // world.add(make_shared<drop>(point3(0, 1, 0), 1.0, 1.0, 1.0, material2));
 
     return world;
 }
 
+hittable_list two_spheres() {
+    hittable_list objects;
+
+    auto checker = make_shared<checker_texture>(color(0.2, 0.3, 0.1), color(0.9, 0.9, 0.9));
+
+    objects.add(make_shared<sphere>(point3(0,-10, 0), 10, make_shared<lambertian>(checker)));
+    objects.add(make_shared<sphere>(point3(0, 10, 0), 10, make_shared<lambertian>(checker)));
+
+    return objects;
+}
+
+hittable_list two_perlin_spheres() {
+    hittable_list objects;
+    auto pertext = make_shared<noise_texture>(4);
+
+    objects.add(make_shared<sphere>(point3(0,-1000,0), 1000, make_shared<lambertian>(pertext)));
+    objects.add(make_shared<sphere>(point3(0, 2, 0), 2, make_shared<lambertian>(pertext)));
+
+    return objects;
+}
+
+hittable_list earth() {
+    auto earth_texture = make_shared<image_texture>("earthmap.jpg");
+    auto earth_surface = make_shared<lambertian>(earth_texture);
+    auto globe = make_shared<sphere>(point3(0,0,0), 2, earth_surface);
+
+    return hittable_list(globe);
+}
+
 int main() {
 
-    const auto aspect_ratio = 3.0 / 2.0;
-    const int image_width = 1200;
+    //randomscene
+    const double aspect_ratio = 3.0 / 2.0;
+    const int image_width = 500;
     const int image_height = static_cast<int>(image_width / aspect_ratio);
-    const int samples_per_pixel = 500;
+    const int samples_per_pixel = 25;
     const int max_depth = 50;
 
-    auto world = random_scene();
+    // auto world = random_scene();
 
-    auto material_ground = make_shared<lambertian>(color(0.8, 0.8, 0.0));
-    auto material_center = make_shared<lambertian>(color(0.1, 0.2, 0.5));
-    auto material_left   = make_shared<dielectric>(1.5);
-    auto material_right  = make_shared<metal>(color(0.8, 0.6, 0.2), 0.0);
+    // point3 lookfrom(13,2,3);
+    // point3 lookat(0,0,0);
+    // vec3 vup(0,1,0);
+    // auto dist_to_focus = 10.0;
+    // auto aperture = 0.1;
 
-    world.add(make_shared<sphere>(point3( 0.0, -100.5, -1.0), 100.0, material_ground));
-    world.add(make_shared<sphere>(point3( 0.0,    0.0, -1.0),   0.5, material_center));
-    world.add(make_shared<sphere>(point3(-1.0,    0.0, -1.0),   0.5, material_left));
-    world.add(make_shared<sphere>(point3(-1.0,    0.0, -1.0), -0.45, material_left));
-    world.add(make_shared<sphere>(point3( 1.0,    0.0, -1.0),   0.5, material_right));
+    // camera cam(lookfrom, lookat, vup, 20, aspect_ratio, aperture, dist_to_focus);
 
-    point3 lookfrom(13,2,3);
-    point3 lookat(0,0,0);
+    hittable_list world;
+
+    point3 lookfrom;
+    point3 lookat;
+    double vfov = 40.0;
+    auto aperture = 0.0;
+
+    switch (0) {
+        case 1:
+            world = random_scene();
+            lookfrom = point3(13,2,3);
+            lookat = point3(0,0,0);
+            vfov = 20.0;
+            aperture = 0.1;
+            break;
+
+        // default:
+        case 2:
+            world = two_spheres();
+            lookfrom = point3(13,2,3);
+            lookat = point3(0,0,0);
+            vfov = 20.0;
+            break;
+
+        // default:
+        case 3:
+            world = two_perlin_spheres();
+            lookfrom = point3(13,2,3);
+            lookat = point3(0,0,0);
+            vfov = 20.0;
+            break;
+
+        default:
+        case 4:
+            world = earth();
+            lookfrom = point3(13,2,3);
+            lookat = point3(0,0,0);
+            vfov = 20.0;
+            break;
+    }
+
+    // Camera
+
     vec3 vup(0,1,0);
     auto dist_to_focus = 10.0;
-    auto aperture = 0.1;
+    // int image_height = static_cast<int>(image_width / aspect_ratio);
 
-    camera cam(lookfrom, lookat, vup, 20, aspect_ratio, aperture, dist_to_focus);
+    camera cam(lookfrom, lookat, vup, vfov, aspect_ratio, aperture, dist_to_focus);
 
     std::ofstream file;
 
