@@ -59,7 +59,34 @@ class noise_texture : public texture {
         virtual color value(double u, double v, const point3& p) const override {
             // return color(1,1,1) * 0.5 * (1.0 + noise.noise(scale * p));
             // return color(1,1,1) * noise.turb(scale * p);
-            return color(1,1,1) * 0.5 * (1 + sin(scale*p.z() + 10*noise.turb(p)));
+            return color(1, 1, 1) * 0.5 * (1 + sin(scale*p.z() + 10*noise.turb(p)));
+        }
+
+    public:
+        perlin noise;
+        double scale;
+};
+
+class noise_texture_matteo : public texture {
+    public:
+        noise_texture_matteo() {}
+        noise_texture_matteo(double sc) : scale(sc) {}
+
+        virtual color value(double u, double v, const point3& p) const override {
+            float x = cos(5*noise.turb(p)*p.x()*p.y()) + sin(5*noise.turb(p)*p.y()*p.y());// + sin(10*noise.turb(p)*p.y()*p.z())*sin(5*noise.turb(p)*p.x()*p.x());
+            float y = sin(10*noise.turb(p)*p.y()*p.z()) + sin(5*noise.turb(p)*p.x()*p.x());// + cos(20*noise.turb(p)*p.z()*p.x())*cos(5*noise.turb(p)*p.z()*p.z());
+            float z = cos(20*noise.turb(p)*p.z()*p.x()) + cos(5*noise.turb(p)*p.z()*p.z());// + cos(5*noise.turb(p)*p.x()*p.y())*sin(5*noise.turb(p)*p.y()*p.y());
+            if (x < 0) {
+                x = 0;
+            }
+            if (y < 0) {
+                y = 0;
+            }
+            if (z < 0) {
+                z = 0;
+            }
+
+            return color(x, y, z) * 0.5 * (1 + sin(scale*p.z() + 10*noise.turb(p)));
         }
 
     public:

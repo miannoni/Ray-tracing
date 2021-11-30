@@ -90,7 +90,7 @@ hittable_list random_scene() {
 hittable_list two_spheres() {
     hittable_list objects;
 
-    auto checker = make_shared<checker_texture>(color(0.2, 0.3, 0.1), color(0.9, 0.9, 0.9));
+    auto checker = make_shared<checker_texture>(color(0.8, 0.3, 0.1), color(0.9, 0.1, 0.9));
 
     objects.add(make_shared<sphere>(point3(0,-10, 0), 10, make_shared<lambertian>(checker)));
     objects.add(make_shared<sphere>(point3(0, 10, 0), 10, make_shared<lambertian>(checker)));
@@ -100,10 +100,50 @@ hittable_list two_spheres() {
 
 hittable_list two_perlin_spheres() {
     hittable_list objects;
-    auto pertext = make_shared<noise_texture>(4);
+    auto pertext = make_shared<noise_texture_matteo>(4);
+    auto pertext2 = make_shared<noise_texture_matteo>(7);
+    auto pertext3 = make_shared<noise_texture_matteo>(11);
+    auto solidcolor = make_shared<solid_color>(color(0.8, 0.8, 0.8));
 
-    objects.add(make_shared<sphere>(point3(0,-1000,0), 1000, make_shared<lambertian>(pertext)));
-    objects.add(make_shared<sphere>(point3(0, 2, 0), 2, make_shared<lambertian>(pertext)));
+    auto fuzz = random_double(0.0, 0.01);
+    objects.add(make_shared<sphere>(point3(0,-1000,0), 1000, make_shared<metal>(solidcolor, fuzz)));
+
+    int size = 5;
+
+    for (int a = 0; a < size; a++) {
+        for (int b = -size; b < size; b++) {
+            auto choose_mat = random_double();
+            auto ball_size = 0.2 + 0.3*random_double();
+            point3 center(a + ((1- ball_size)/2)*random_double(), ball_size + 0.5*random_double(), b + ((1-ball_size)/2)*random_double());
+
+            if ((center - point3(4, 0.2, 0)).length() > 0.9) {
+                // shared_ptr<material> sphere_material;
+
+                if (choose_mat < 0.8) {
+                    objects.add(make_shared<sphere>(center, ball_size, make_shared<lambertian>(pertext)));
+                //     // diffuse
+                //     auto albedo = color::random() * color::random();
+                //     sphere_material = make_shared<lambertian>(albedo);
+                //     world.add(make_shared<sphere>(center, 0.2, sphere_material));
+                } else if (choose_mat < 0.95) {
+                    objects.add(make_shared<sphere>(center, ball_size, make_shared<lambertian>(pertext2)));
+                //     // metal
+                //     auto albedo = color::random(0.5, 1);
+                //     auto fuzz = random_double(0, 0.5);
+                //     sphere_material = make_shared<metal>(albedo, fuzz);
+                //     world.add(make_shared<sphere>(center, 0.2, sphere_material));
+                } else {
+                    objects.add(make_shared<sphere>(center, ball_size, make_shared<lambertian>(pertext3)));
+                //     // glass
+                //     sphere_material = make_shared<dielectric>(1.5);
+                //     world.add(make_shared<sphere>(center, 0.2, sphere_material));
+                }
+            }
+        }
+    }
+    // objects.add(make_shared<sphere>(point3(-10, 1.3, 0), 1, make_shared<lambertian>(pertext)));
+    // objects.add(make_shared<sphere>(point3(-10, 1.3, -3), 1, make_shared<lambertian>(pertext)));
+    // objects.add(make_shared<sphere>(point3(-10, 1.3, -6), 1, make_shared<lambertian>(pertext)));
 
     return objects;
 }
@@ -120,9 +160,9 @@ int main() {
 
     //randomscene
     const double aspect_ratio = 3.0 / 2.0;
-    const int image_width = 500;
+    const int image_width = 2440;
     const int image_height = static_cast<int>(image_width / aspect_ratio);
-    const int samples_per_pixel = 25;
+    const int samples_per_pixel = 10;
     const int max_depth = 50;
 
     // auto world = random_scene();
@@ -143,6 +183,7 @@ int main() {
     auto aperture = 0.0;
 
     switch (0) {
+        // default:
         case 1:
             world = random_scene();
             lookfrom = point3(13,2,3);
@@ -159,15 +200,15 @@ int main() {
             vfov = 20.0;
             break;
 
-        // default:
+        default:
         case 3:
             world = two_perlin_spheres();
-            lookfrom = point3(13,2,3);
+            lookfrom = point3(16,4,3);
             lookat = point3(0,0,0);
             vfov = 20.0;
             break;
 
-        default:
+        // default:
         case 4:
             world = earth();
             lookfrom = point3(13,2,3);
